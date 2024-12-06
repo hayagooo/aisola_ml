@@ -13,7 +13,7 @@ LSTM is a type of recurrent neural network (RNN) well-suited for time series dat
 - Training and Validation Loss
   ![Image](https://github.com/hayagooo/aisola_ml/blob/main/results/lstm/loss.png?raw=true)
 - Actual vs Predicted Scatter Plot
-  ![Image](https://github.com/hayagooo/aisola_ml/blob/main/results/lstm/loss_scatter.png?raw=true)
+  ![Image](https://github.com/hayagooo/aisola_ml/blob/main/results/lstm/predicted_scatter.png?raw=true)
 - Bar Chart of Loss
   ![Image](https://github.com/hayagooo/aisola_ml/blob/main/results/lstm/loss_bar_chart.png?raw=true)
 
