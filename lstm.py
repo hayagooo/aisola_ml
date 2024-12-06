@@ -1,22 +1,16 @@
 import pandas as pd
 import numpy as np
 from math import sqrt
-from numpy import concatenate
 from matplotlib import pyplot
 from pandas import read_csv
-from pandas import DataFrame
-from pandas import concat
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.layers import LSTM, GRU
-from keras.optimizers import Adam
+from keras.layers import Dense
+from keras.layers import LSTM
 import tensorflow as tf
-import optuna
-from datetime import datetime
-
+import seaborn as sns
+from tensorflow.keras.utils import plot_model
 
 dataset = read_csv("data.csv", na_values=['nan', '?'])
 dataset['dt'] = pd.to_datetime(dataset['timestamp'])
@@ -32,7 +26,7 @@ scaled = scaler.fit_transform(values)
 scaled = pd.DataFrame(scaled)
 print(scaled.head(4))
 
-def create_ts_data(dataset, lookback=5, predicted_col=3):
+def create_ts_data(dataset, lookback=100, predicted_col=-1):
     temp = dataset.copy()
     temp["id"]= range(1, len(temp)+1)
     temp = temp.iloc[:-lookback, :]
@@ -70,70 +64,16 @@ train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
 test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
 print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
 
-def create_combined_model(trial):
-    units_lstm1 = trial.suggest_int('units_lstm1', 50, 150, step=25)
-    units_gru1 = trial.suggest_int('units_gru1', 30, 100, step=20)
-    units_lstm2 = trial.suggest_int('units_lstm2', 30, 70, step=10)
-    units_gru2 = trial.suggest_int('units_gru2', 20, 50, step=10)
-    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5, step=0.1)
-    learning_rate = trial.suggest_loguniform('learning_rate', 1e-4, 1e-2)
-    
-    model = Sequential()
-    model.add(LSTM(units_lstm1, return_sequences=True, input_shape=(train_X.shape[1], train_X.shape[2])))
-    model.add(Dropout(dropout_rate))
-    model.add(GRU(units_gru1, return_sequences=True))
-    model.add(Dropout(dropout_rate))
-    model.add(LSTM(units_lstm2, return_sequences=True))
-    model.add(Dropout(dropout_rate))
-    model.add(GRU(units_gru2))
-    model.add(Dropout(dropout_rate))
-    model.add(Dense(units=1))
-    
-    optimizer = Adam(learning_rate=learning_rate)
-    model.compile(optimizer=optimizer, loss='mae')
-    return model
+model_lstm = Sequential()
+model_lstm.add(LSTM(75, return_sequences=True, input_shape=(100, train_X.shape[2])))
+model_lstm.add(LSTM(units=30, return_sequences=True))
+model_lstm.add(LSTM(units=30))
+model_lstm.add(Dense(units=1))
 
-def objective(trial):
-    model = create_combined_model(trial)
-    
-    history = model.fit(
-        train_X, train_y,
-        validation_data=(test_X, test_y),
-        epochs=36,
-        batch_size=32,
-        verbose=0,
-        shuffle=False
-    )
-    
-    val_loss = history.history['val_loss'][-1]
-    return val_loss
+model_lstm.compile(loss='mae', optimizer='adam')
 
-study = optuna.create_study(direction='minimize')
-study.optimize(objective, n_trials=20)
-
-print(f"Best trial: {study.best_trial.params}")
-print("Best Hyperparameters:")
-for key, value in study.best_trial.params.items():
-    print(f"{key}: {value}")
-    
-best_params = study.best_trial.params
-    
-model_combined = Sequential()
-model_combined.add(LSTM(best_params['units_lstm1'], return_sequences=True, input_shape=(train_X.shape[1], train_X.shape[2])))
-model_combined.add(Dropout(best_params['dropout_rate']))
-model_combined.add(GRU(best_params['units_gru1'], return_sequences=True))
-model_combined.add(Dropout(best_params['dropout_rate']))
-model_combined.add(LSTM(best_params['units_lstm2'], return_sequences=True))
-model_combined.add(Dropout(best_params['dropout_rate']))
-model_combined.add(GRU(best_params['units_gru2']))
-model_combined.add(Dropout(best_params['dropout_rate']))
-model_combined.add(Dense(units=1))
-
-optimizer = Adam(learning_rate=best_params['learning_rate'])
-model_combined.compile(optimizer=optimizer, loss='mae')
-
-lstm_history = model_combined.fit(train_X, train_y, epochs=36, validation_data=(test_X, test_y), batch_size=32, shuffle=False)
-pred_y =  model_combined.predict(test_X)
+lstm_history = model_lstm.fit(train_X, train_y, epochs=10,validation_data=(test_X, test_y), batch_size=64, shuffle=False)
+pred_y =  model_lstm.predict(test_X)
 
 pyplot.plot(lstm_history.history['loss'], label='lstm train', color='brown')
 pyplot.plot(lstm_history.history['val_loss'], label='lstm test', color='blue')
@@ -166,7 +106,7 @@ plt.show()
 
 tra = np.concatenate([train_X,test_X])
 tes = np.concatenate([train_y,test_y])
-fp = model_combined.predict(tra)
+fp = model_lstm.predict(tra)
 plt.plot(tes, label = 'Actual')
 plt.plot(fp, label = 'Predicted')
 plt.legend()
@@ -182,14 +122,77 @@ plt.plot(fp[:500], label = 'Predicted')
 plt.legend()
 plt.show()
 
-converter = tf.lite.TFLiteConverter.from_keras_model(model_combined)
+converter = tf.lite.TFLiteConverter.from_keras_model(model_lstm)
 converter.target_spec.supported_ops = [
     tf.lite.OpsSet.TFLITE_BUILTINS,
     tf.lite.OpsSet.SELECT_TF_OPS
 ]
 tflite_model = converter.convert()
 
-with open("aisola_lstm_gru.tflite", "wb") as f:
+with open("aisola_lstm.tflite", "wb") as f:
     f.write(tflite_model)
 
 print("Model berhasil disimpan dalam format TFLite!")
+
+# Plot 1: Model Architecture
+plot_model(
+    model_lstm,
+    to_file='model_lstm_architecture.png',
+    show_shapes=True,
+    show_layer_names=True,
+    expand_nested=True
+)
+print("Model architecture saved as 'model_lstm_architecture.png'.")
+
+plt.figure(figsize=(10, 5))
+plt.plot(lstm_history.history['loss'], label='Training Loss', color='brown')
+plt.plot(lstm_history.history['val_loss'], label='Validation Loss', color='blue')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss')
+plt.legend()
+plt.grid(True)
+plt.savefig('lstm_loss_plot.png')
+plt.show()
+
+plt.figure(figsize=(10, 5))
+plt.plot(test_y[:500], label='Actual kWh', color='blue')
+plt.plot(pred_y[:500], label='Predicted kWh', color='orange')
+plt.xlabel('Time Steps')
+plt.ylabel('kWh')
+plt.title('Actual vs Predicted (Zoomed to 500 samples)')
+plt.legend()
+plt.grid(True)
+plt.savefig('lstm_actual_vs_predicted.png')
+plt.show()
+
+residuals = test_y - pred_y.flatten()
+plt.figure(figsize=(10, 5))
+sns.histplot(residuals, kde=True, color='purple', bins=30)
+plt.xlabel('Residuals')
+plt.title('Residual Distribution')
+plt.grid(True)
+plt.savefig('lstm_residuals_distribution.png')
+plt.show()
+
+plt.figure(figsize=(10, 5))
+epochs = range(1, len(lstm_history.history['loss']) + 1)
+plt.bar(epochs, lstm_history.history['loss'], label='Training Loss', color='brown', alpha=0.6)
+plt.bar(epochs, lstm_history.history['val_loss'], label='Validation Loss', color='blue', alpha=0.6)
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Loss Bar Chart')
+plt.legend()
+plt.grid(True)
+plt.savefig('lstm_loss_barchart.png')
+plt.show()
+
+plt.figure(figsize=(10, 5))
+plt.scatter(test_y, pred_y, alpha=0.6, edgecolors='k', label='Predicted vs Actual')
+plt.xlabel('Actual kWh')
+plt.ylabel('Predicted kWh')
+plt.title('Predicted vs Actual kWh (Scatter Plot)')
+plt.grid(True)
+plt.legend()
+plt.savefig('lstm_scatter_plot.png')
+plt.show()
