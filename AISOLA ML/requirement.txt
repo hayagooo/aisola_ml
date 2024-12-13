@@ -1,0 +1,51 @@
+# AI dan Pembelajaran Mesin
+absl-py==2.1.0  # Library untuk logging, argumen parsing, dan debugging pada proyek AI
+tensorflow-intel==2.17.0  # Framework untuk membangun dan melatih model AI
+keras==3.7.0  # API tingkat tinggi untuk TensorFlow, mempermudah pembangunan model neural network
+scikit-learn==1.5.2  # Library untuk machine learning, mencakup klasifikasi, regresi, dan clustering
+scipy==1.13.1  # Digunakan untuk komputasi ilmiah, sering dipakai dalam optimasi dan statistik
+numpy==1.26.0  # Library fundamental untuk komputasi numerik
+pandas==2.2.2  # Pengolahan dan analisis data berbasis tabel (DataFrame)
+matplotlib==3.9.3  # Visualisasi data, pembuatan grafik
+seaborn==0.13.2  # Pengembangan dari matplotlib untuk visualisasi statistik
+jax==0.4.28  # Library untuk komputasi numerik dengan autodiff (diferensiasi otomatis)
+
+# Web Development
+fastapi==0.111.0  # Framework untuk membangun API berbasis Python dengan performa tinggi
+Django==4.2.16  # Framework web Python yang memudahkan pembangunan aplikasi web
+uvicorn==0.30.1  # Server ASGI untuk menjalankan aplikasi FastAPI atau Django ASGI
+starlette==0.37.2  # Framework web ringan untuk FastAPI
+
+# Proyek Computer Vision
+opencv-python==4.7.0.72  # Library utama untuk pengolahan gambar dan video
+opencv-contrib-python==4.10.0.84  # Versi OpenCV dengan modul tambahan
+pillow==11.0.0  # Manipulasi gambar seperti cropping, resizing, atau filtering
+labelImg==1.8.6  # Alat untuk memberi label pada dataset gambar
+
+# Analisis dan Visualisasi Data
+altair==5.3.0  # Library visualisasi data berbasis deklaratif
+plot-model==0.20  # Untuk visualisasi arsitektur model neural network
+rich==13.9.4  # Library untuk mencetak teks dan tabel berwarna di terminal
+
+# Proyek NLP dan API terkait Google
+google-auth==2.29.0  # Autentikasi Google API
+google-auth-oauthlib==1.0.0  # Integrasi OAuth untuk aplikasi
+
+# Utilitas Umum
+click==8.1.7  # Membuat antarmuka command-line untuk aplikasi Python
+filelock==3.15.4  # Mengelola file lock untuk mencegah konflik akses file
+requests==2.32.3  # Library HTTP untuk mengirimkan permintaan web
+urllib3==2.2.3  # Library untuk membuat koneksi HTTP dengan manajemen koneksi yang lebih baik
+
+# Streaming dan Real-Time Communication
+aiortc==1.9.0  # Implementasi WebRTC di Python untuk komunikasi real-time
+av==12.3.0  # Membaca dan menulis file multimedia seperti audio dan video
+pyee==12.0.0  # Event emitter berbasis Python, mirip dengan EventEmitter di Node.js
+websockets==11.0.3  # Komunikasi WebSocket untuk aplikasi real-time
+
+# Pustaka Lain
+pyinstaller==6.10.0  # Membuat executable dari script Python
+virtualenv==20.26.3  # Mengelola lingkungan Python virtual
+pyserial==3.5  # Komunikasi serial di Python, sering digunakan untuk perangkat seperti Arduino
+pycocotools==2.0.7  # Digunakan untuk evaluasi dataset COCO dalam computer vision
+ultralytics==8.2.55  # Library untuk YOLOv5, deteksi objek berbasis AI
